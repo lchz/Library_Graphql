@@ -150,10 +150,23 @@ const resolvers = {
     authorCount: async () => Author.collection.countDocuments(),
 
     allBooks: async (root, args) => {
-      if (args.authorName) {
+      if (args.authorName && args.genre) {
+        const authorOb = await Author.findOne({name: args.authorName})
+
+        return await Book.find({
+          author: authorOb._id,
+          genres: args.genre
+        })
+      }
+      if (args.authorName && !args.genre) {
         const authorOb = await Author.findOne({name: args.authorName})
         const res = await Book.find({author: authorOb._id})
         return res
+      }
+      if (!args.authorName && args.genre) {
+        return await Book.find({
+                                genres: args.genre
+                              })
       }
       return Book.find({})
     },
@@ -195,7 +208,7 @@ const resolvers = {
         try {
           findAuthor = await newAuthor.save()
           console.log('Add new author:', findAuthor)
-          
+
         } catch {
           throw new GraphQLError('Author name is too short', {
             extensions: {
@@ -248,6 +261,8 @@ const resolvers = {
 
   }
 }
+
+
 
 const server = new ApolloServer({
   typeDefs,
