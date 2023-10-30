@@ -2,6 +2,8 @@ const { ApolloServer } = require('@apollo/server')
 const { startStandaloneServer } = require('@apollo/server/standalone')
 const { default: mongoose } = require('mongoose')
 const { v1: uuid } = require('uuid')
+const { GraphQLError } = require("graphql")
+
 
 const Book = require('./models/book')
 const Author = require('./models/author')
@@ -189,8 +191,20 @@ const resolvers = {
 
       if (!findAuthor) {
         const newAuthor = new Author( {name: args.authorName})
-        findAuthor = await newAuthor.save()
-        console.log('Add new author:', findAuthor)
+
+        try {
+          findAuthor = await newAuthor.save()
+          console.log('Add new author:', findAuthor)
+          
+        } catch {
+          throw new GraphQLError('Author name is too short', {
+            extensions: {
+              code: 'BAD_USER_INPUT',
+              invalidArgs: args.authorName
+            }
+          })
+        }
+        
       }
 
       const newBook = new Book( {
@@ -200,11 +214,20 @@ const resolvers = {
         author: findAuthor._id,
       })
 
-      const res = await newBook.save()
+      try {
+        const res = await newBook.save()
+        console.log('Saved new book:', res)
+        return res
 
-      console.log('Saved new book:', res)
+      } catch {
+        throw new GraphQLError('Book title is too short', {
+          extensions: {
+            code: 'BAD_USER_INPUT',
+            invalidArgs: args.title
+          }
+        })
+      }
 
-      return res
     },
 
     editAuthor: (root, args) => {
