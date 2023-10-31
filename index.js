@@ -123,6 +123,7 @@ const typeDefs = `
   
   type Token {
     value: String!
+    username: String!
   }
 
   type Query {
@@ -192,6 +193,7 @@ const resolvers = {
                                 genres: args.genre
                               })
       }
+      console.log('Find all books')
       return Book.find({})
     },
 
@@ -210,12 +212,13 @@ const resolvers = {
             $project: {
               "name": "$name",
               "born": "$born",
-              "bookCount": {$size: "$bookList"}
+              "bookCount": {$size: "$bookList"},
+              "id": "$_id"
             }
           },
         ]
       )
-
+      // console.log('allauthors:', res)
       return res
     },
 
@@ -229,7 +232,10 @@ const resolvers = {
     addBook: async (root, args, context) => {
       // Check login information
       const currentUser = context.currentUser
+      console.log('args:', args)
       if (!currentUser) {
+        console.log('no current:', context.currentUser)
+
         throw new GraphQLError('Not authenticated', {
           extensions: 'BAD_USER_INPUT'
         })
@@ -351,12 +357,11 @@ const resolvers = {
 
       console.log('Logged in as user:', user.username)
 
-      return {value: token}
+      return {value: token, username: user.username}
 
     },
   }
 }
-
 
 
 const server = new ApolloServer({
