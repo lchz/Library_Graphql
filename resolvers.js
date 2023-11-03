@@ -12,7 +12,24 @@ const resolvers = {
   
       authorCount: async () => Author.collection.countDocuments(),
   
+      findBooksByTitle: async (root, args) => {
+          console.log('Title searching:', args.title)
+          const bookList = await Book.find({title: args.title})
+          console.log('Result:', bookList)
+
+          return bookList
+      },
+
       allBooks: async (root, args) => {
+        if (args.title) {
+          console.log('Title searching:', args.title)
+
+          const bookList = await Book.find({}).populate('author')
+          const result = bookList.filter(b => b.title.toLowerCase().includes(args.title.toLowerCase()))
+          console.log('Result:', result)
+
+          return result
+        }
         if (args.authorName && args.genre) {
           const authorOb = await Author.findOne({name: args.authorName})
   
@@ -25,7 +42,8 @@ const resolvers = {
         if (args.authorName && !args.genre) {
           const authorOb = await Author.findOne({name: args.authorName})
           const res = await Book.find({author: authorOb._id})
-          return res.populate('author')
+          // return res.populate('author')
+          return res
         }
   
         if (!args.authorName && args.genre) {

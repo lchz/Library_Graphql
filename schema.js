@@ -26,9 +26,10 @@ const typeDefs = `
   type Query {
     bookCount: Int!
     authorCount: Int!
-    allBooks(authorName: String, genre: String): [Book]!
+    allBooks(authorName: String, genre: String, title: String): [Book]!
     allAuthors: [Author]!
     me: User
+    findBooksByTitle(title: String!): [Book]!
   }
 
   type Mutation {
